@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>html,body,#p{margin:0;height:100%;background:#000;overflow:hidden}</style></head>
+<body><div id="p"></div>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+// Tiny helper page: hosts the YouTube player on https and reports play/pause to the app via postMessage.
+var id=(new URLSearchParams(location.search).get('v')||'');
+function send(o){o.ewi='yt';parent.postMessage(o,'*')}
+function onYouTubeIframeAPIReady(){
+  if(!/^[\w-]{11}$/.test(id)){send({t:'error'});return}
+  new YT.Player('p',{videoId:id,width:'100%',height:'100%',playerVars:{playsinline:1,rel:0,modestbranding:1},
+    events:{onReady:function(){send({t:'ready'})},
+            onStateChange:function(e){send({t:'state',playing:e.data===1})},
+            onError:function(){send({t:'error'})}}});
+}
+</script></body></html>
