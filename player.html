@@ -1,17 +1,16 @@
-<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>html,body,#p{margin:0;height:100%;background:#000;overflow:hidden}</style></head>
-<body><div id="p"></div>
-<script src="https://www.youtube.com/iframe_api"></script>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#p{width:100%;height:100%}</style></head><body><div id="p"></div>
 <script>
-// Tiny helper page: hosts the YouTube player on https and reports play/pause to the app via postMessage.
-var id=(new URLSearchParams(location.search).get('v')||'');
-function send(o){o.ewi='yt';parent.postMessage(o,'*')}
-function onYouTubeIframeAPIReady(){
-  if(!/^[\w-]{11}$/.test(id)){send({t:'error'});return}
-  new YT.Player('p',{videoId:id,width:'100%',height:'100%',playerVars:{playsinline:1,rel:0,modestbranding:1},
-    events:{onReady:function(){send({t:'ready'})},
-            onStateChange:function(e){send({t:'state',playing:e.data===1})},
-            onError:function(){send({t:'error'})}}});
-}
+const q=new URLSearchParams(location.search),id=(q.get('v')||'').trim();let playing=false,sc=-1,yp=null;
+const send=m=>{try{parent.postMessage(m,'*')}catch(e){}};
+if(!/^[\w-]{11}$/.test(id)){send({t:'error',code:'bad_id'})}
+else{const s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';s.onerror=()=>send({t:'error',code:'api'});document.head.appendChild(s)}
+window.onYouTubeIframeAPIReady=()=>{yp=new YT.Player('p',{width:'100%',height:'100%',videoId:id,
+ playerVars:{playsinline:1,rel:0,modestbranding:1,origin:location.origin},
+ events:{onReady:()=>send({t:'ready'}),
+  onStateChange:e=>{const c=e.data;sc=c;
+   if(c===0){try{yp.seekTo(0);yp.playVideo()}catch(x){}}
+   playing=(c===1||c===3||c===0);send({t:'state',playing,s:c})},
+  onError:e=>send({t:'error',code:e.data})}})};
+setInterval(()=>send({t:'state',playing,s:sc}),1000);
 </script></body></html>
